@@ -24,6 +24,7 @@
     "rollup-plugin-jsx": "^1.0.3",
     "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-typescript": "^0.8.1",
+    "rollup-plugin-visualizer": "^0.2.0",
     "rollup-watch": "^3.2.2"
   }
 }
