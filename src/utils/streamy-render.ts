@@ -9,6 +9,7 @@ export const render = (tree$, parentElem) => {
 
 	tree$.map((tree) => {
 		let patches = diff(oldTree, tree);
+		oldTree = tree;
 		patch(rootNode, patches);
 	});
 };

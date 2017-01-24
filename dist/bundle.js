@@ -1922,6 +1922,7 @@ var render = function (tree$, parentElem) {
     parentElem.appendChild(rootNode);
     tree$.map(function (tree) {
         var patches = diff_1(oldTree, tree);
+        oldTree = tree;
         patch_1(rootNode, patches);
     });
 };
@@ -1954,6 +1955,8 @@ function queryStore(state$, query) {
         return state$;
     return state$.deepSelect(query);
 }
+
+//# sourceMappingURL=reduxy.js.map
 
 function isAuthenticated(token$) {
     return function (res) {
@@ -2007,7 +2010,7 @@ function fetchMiddleware(prefix, reducer) {
 
 var CLICK = 'CLICK';
 var FETCHED = 'FETCHED';
-var SUBTRACKED = 'SUBTRACKED';
+var SUBTRACT = 'SUBTRACKED';
 var INITIAL_STORE = {
     clicks: 0
 };
@@ -2018,7 +2021,7 @@ function clicksReducer(_state, _a) {
         case CLICK: return Object.assign({}, state, {
             clicks: ++state.clicks
         });
-        case SUBTRACKED: return Object.assign({}, state, {
+        case SUBTRACT: return Object.assign({}, state, {
             clicks: --state.clicks
         });
         case FETCHED: return Object.assign({}, state, {
@@ -2038,7 +2041,7 @@ var CleverComponent = function (_a) {
 };
 var DumbComponent = function (_a) {
     var store = _a.sinks.store;
-    return h('button', { onclick: function () { return store.dispatch({ type: SUBTRACKED }); } }, ["subtracked"]);
+    return h('button', { onclick: function () { return store.dispatch({ type: SUBTRACT }); } }, ["subtract"]);
 };
 //# sourceMappingURL=component.jsx.map
 

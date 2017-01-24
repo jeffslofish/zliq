@@ -1,5 +1,5 @@
 import { h } from './utils/streamy-hyperscript';
-import { SUBTRACKED } from './reducers/clicks';
+import { SUBTRACT } from './reducers/clicks';
 
 export const CleverComponent = ({sinks: {store}}) => {
 	return store.$('clicks.clicks').map(clicks => {
@@ -8,4 +8,4 @@ export const CleverComponent = ({sinks: {store}}) => {
 };
 
 export const DumbComponent = ({sinks: {store}}) =>
-	<button onclick={() => store.dispatch({type: SUBTRACKED})}>subtracked</button>;
+	<button onclick={() => store.dispatch({type: SUBTRACT})}>subtract</button>;
