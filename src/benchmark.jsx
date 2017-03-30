@@ -2,6 +2,8 @@ import { h } from './utils/streamy-hyperscript';
 import { list } from './utils/streamy-list';
 import { stream, merge$} from './utils/streamy';
 
+var lastUpdate = null;
+
 function _random(max) {
 	return Math.round(Math.random()*1000)%max;
 };
@@ -123,7 +125,7 @@ let app =
 			</div>
 		</div>
 		<table className='table table-hover table-striped test-data'>
-			<tbody>
+			<tbody id="list-wrapper">
 			{
 				list(state$, 'items', (item, {selected}) =>
 					<tr id={item.id} className={selected === item.id ? 'danger' : ''}>
@@ -143,4 +145,11 @@ let app =
 		<span className="preloadicon glyphicon glyphicon-remove" aria-hidden="true"></span>
 	</div>
 ;
+app.addEventListener('children-updated', () => {
+	lastUpdate = new Date();
+	app.querySelector('#list-wrapper').addEventListener('children-updated', () => {
+		console.log('render time:', new Date() - lastUpdate);
+		lastUpdate = new Date();
+	});
+})
 document.querySelector('#main').appendChild(app);

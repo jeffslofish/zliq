@@ -2,9 +2,12 @@
 // members can be functions or promises
 export function PromiseQueue() {
     var current = Promise.resolve();
+    var queueLength = 0;
+    var onDoneCallbacks = [];
 
     return {
         add: (fn) => {
+            queueLength++;
             current = current.then(() => {
                 return new Promise((_resolve_, _reject_) => {
                     let result = fn();
@@ -14,9 +17,18 @@ export function PromiseQueue() {
                     } else {
                         setImmediate(_resolve_)
                     }
-                })
+                }).then(() => {
+                    queueLength--;
+                    // if there are no more promises to execute, notify outside that we are done
+                    if (queueLength === 0) {
+                        onDoneCallbacks.forEach(callback => callback());
+                    }
+                });
             });
             return current;
+        },
+        onDone: (callback) => {
+            onDoneCallbacks.push(callback);
         }
     }
 }

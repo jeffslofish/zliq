@@ -17,6 +17,7 @@ export function createElement(tagName, properties$, children$Arr) {
 
 function manageChildren(parentElem, children$Arr) {
 	let changeQueue = PromiseQueue([]);
+	changeQueue.onDone(() => notifyAboutChildrenUpdate(parentElem));
 	// array to store the actual count of elements in one virtual elem
 	// one virtual elem can produce a list of elems so we can't rely on the index only
 	children$Arr.map((child$, index) => {
@@ -58,6 +59,13 @@ function manageChildren(parentElem, children$Arr) {
 			});
 		}
 	});
+}
+
+function notifyAboutChildrenUpdate(parentElem) {
+	let event = new CustomEvent('children-updated', {
+		bubbles: false
+	});
+	parentElem.dispatchEvent(event);
 }
 
 /*

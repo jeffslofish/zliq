@@ -1,23 +1,42 @@
 import odiff from 'odiff';
+import {getPatch} from 'fast-array-diff';
+import deepEqual from 'deep-equal';
 
 onmessage = function({data: {
 	newArr, oldArr
 }}) {
-    let changes = odiff(oldArr, newArr);
+    let changes = getPatch(oldArr, newArr, deepEqual);
+
+    if (changes.length === 0) return;
+
     changes = changes.map(change => {
-        // changes in arrays are currently analysed deep
-        // but we only need the changed element
-        if (change.type === 'set' && change.path && typeof change.path[0] === 'number') {
-            let index = change.path[0];
-            return {
-                val: newArr[index],
-                index,
-                type: change.type
-            };
+        return {
+            type: change.type === 'remove' ? 'rm' : change.type,
+            index: change.newPos,
+            length: change.type === 'remove' ? change.items.length : undefined,
+            vals: change.type === 'remove' ? undefined : change.items
         }
         return change;
     });
-    // set changes are singular changes
+    // make rm + add on the same index into a set
+    changes = changes.reduce((_changes_, cur) => {
+        if (_changes_.length > 0) {
+            let lastChange = _changes_[_changes_.length - 1];
+            if (cur.type === 'add' && lastChange.type === 'rm' 
+                && cur.index === lastChange.index
+                && cur.vals.length === lastChange.length
+            ) {
+                _changes_.pop();
+
+                return _changes_.concat({
+                    index: cur.index,
+                    vals: cur.vals,
+                    type: 'set'
+                })
+            }
+        }
+        return _changes_.concat(cur);
+    }, []);
     // aggregate those to be able to batch process them
     let aggregatedSetChange;
     changes = changes.reduce((_changes_, cur) => {
@@ -30,7 +49,7 @@ onmessage = function({data: {
                 }
             }
             aggregatedSetChange.index.push(cur.index);
-            aggregatedSetChange.vals.push(cur.val);
+            aggregatedSetChange.vals.push(cur.vals);
             return _changes_;
         }
         if (aggregatedSetChange != null) {
