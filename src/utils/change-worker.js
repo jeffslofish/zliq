@@ -48,8 +48,10 @@ onmessage = function({data: {
                     type: 'set'
                 }
             }
-            aggregatedSetChange.index.push(cur.index);
-            aggregatedSetChange.vals.push(cur.vals);
+            cur.vals.map(val => {
+                aggregatedSetChange.index.push(cur.index++);
+                aggregatedSetChange.vals.push(val);
+            })
             return _changes_;
         }
         if (aggregatedSetChange != null) {

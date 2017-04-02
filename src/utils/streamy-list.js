@@ -36,7 +36,8 @@ export function list(input$, listSelector, renderFunc) {
 	return output$;
 }
 
-function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, batchCallback) {
+function renderChange({index, val, vals, type, length, path }, inputs, renderFunc, batchCallback) {
+	// REFACTOR
 	if (type === 'add' || type === 'set') {
 		let renderedAddElems = [];
 		let queue = new PromiseQueue();
@@ -46,10 +47,12 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 		}), elems => {
 			let partialChange = {
 				type,
-				index,
+				index: Array.isArray(index) ? index.splice(0, elems.length) : index,
 				elems,
 			};
-			index += elems.length;
+			if (!Array.isArray(index)) {
+				index += elems.length;
+			}
 			batchCallback([partialChange]);
 		})
 		// .then(() => {
@@ -60,7 +63,7 @@ function renderChange({index, val, vals, type, num, path }, inputs, renderFunc, 
 		batchCallback([{
 			type,
 			index,
-			num
+			num: length
 		}]);
 	}
 	return Promise.resolve();
