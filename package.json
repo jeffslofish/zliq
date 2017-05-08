@@ -6,24 +6,25 @@
   "scripts": {
     "test": "jest",
     "tdd": "jest --watch",
-    "start": "webpack-dev-server --config webpack/demo.js",
-    "build": "webpack --config webpack/build.js --output-filename=zliq.js --output-path=lib/",
-    "build:min": "webpack -p --config webpack/build_min.js --output-filename=zliq.min.js --output-path=lib/",
-    "build:demo": "webpack --config webpack/demo.js",
+    "tdd:debug": "node --debug-brk ./node_modules/jest-cli/bin/jest.js --runInBand --watch",
+    "start": "webpack-dev-server --config webpack/demo.js --progress --open",
+    "build": "webpack --config webpack/build.js --progress --output-filename=zliq.js --output-path=lib/",
+    "build:min": "webpack -p --config webpack/build_min.js --progress --output-filename=zliq.min.js --output-path=lib/",
+    "build:demo": "webpack --config webpack/demo.js --progress",
     "build:lib": "npm run build && npm run build:min",
-    "start:benchmark": "webpack-dev-server --config webpack/benchmark.js",
+    "start:benchmark": "webpack-dev-server --config webpack/benchmark.js --progress --open",
     "build:benchmark": "webpack --config webpack/benchmark.js",
     "build-prod": "npm run build:benchmark",
-    "prepublish": "npm test && rimraf lib/** && npm run build:lib",
+    "prepublishOnly": "npm test && rimraf lib/** && npm run build:lib",
     "ghpages": "npm run build:demo && git subtree push --prefix demo origin gh-pages"
   },
   "author": "Fabian <faboweber@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "deep-equal": "^1.0.1",
-    "jest": "^20.0.0"
+    "deep-equal": "^1.0.1"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
     "babel-core": "^6.23.1",
     "babel-jest": "^20.0.0",
     "babel-loader": "^6.2.10",
@@ -32,6 +33,7 @@
     "babel-preset-es2015": "^6.22.0",
     "babel-register": "^6.24.0",
     "css-loader": "^0.26.1",
+    "jest": "^20.0.0",
     "jquery": "^3.2.1",
     "materialize-css": "^0.98.2",
     "node-sass": "^4.5.0",

@@ -2,12 +2,6 @@ import {merge$, stream} from './streamy';
 
 export const UPDATE_DONE = 'update_done';
 
-// js DOM events. add which ones you need
-const DOM_EVENT_LISTENERS = [
-	'onchange', 'onclick', 'onmouseover', 'onmouseout', 'onkeydown', 'onload',
-    'ondblclick'
-];
-
 const BATCH_CHILD_CHANGE_TRESHOLD = 5;
 
 /*
@@ -17,83 +11,82 @@ const BATCH_CHILD_CHANGE_TRESHOLD = 5;
 */
 export function createElement(tagName, properties$, children$Arr) {
     let elem = document.createElement(tagName);
-    manageProperties(elem, properties$)
-    manageChildren(elem, children$Arr);
-    return elem;
-}
 
-// reacts to property changes and applies these changes to the dom element
-function manageProperties(elem, properties$) {
-    properties$.map(properties => {
-        if (!properties) return;
-        Object.getOwnPropertyNames(properties).map(property => {
-            let value = properties[property];
-            // check if event
-            if (DOM_EVENT_LISTENERS.indexOf(property) !== -1) {
-                // we can't pass the function as a property
-                // so we bind to the event
+    properties$.reduce((oldProperties, properties) => {
+		manageProperties(elem, properties);
+		return properties
+    }, {});
 
-				// property event binder start with 'on' but events not so we need to strip that
-                let eventName = property.substr(2);
-				// TODO notify dev about value not being a function
-				if (typeof value === 'function') {
-					elem.removeEventListener(eventName, value);
-					elem.addEventListener(eventName, value);
-				}
-            } else if (property === 'class' || property.toLowerCase() === 'classname') {
-                elem.className = value;
-			// we leave the possibility to define styles as strings
-			// but we allow styles to be defined as an object
-            } else if (property === 'style' && typeof value !== "string" ) {
-                Object.assign(elem.style, value);
-			// other propertys are just added as is to the DOM
-            } else {
-                elem.setAttribute(property, value);
-            }
-        });
-    });
-}
-
-// manage changes in the childrens (not deep changes, those are handled by the children)
-function manageChildren(parentElem, children$Arr) {
 	// hook into every child stream for changes
 	// children can be arrays and are always treated like such
 	// changes are then performed on the parent
 	children$Arr.map((child$, index) => {
 		child$.reduce((oldChildArr, childArr) => {
-			// the default childArr will be [null]
-			let changes = calcChanges(childArr, oldChildArr);
-
-			if (changes.length === 0) {
-				return childArr;
-			}
-
-			let elementsBefore = getElementsBefore(children$Arr, index);
-			// apply the changes
-			Promise.all(
-				changes.map(({indexes: subIndexes, type, num, elems}) => {
-					return updateDOMforChild(elems, elementsBefore, subIndexes, type, num, parentElem)
-				})
-			)
-				// after changes are done notify listeners
-				.then(() => {
-					notifyParent(parentElem, UPDATE_DONE);
-				})
-
+			manageChildren(elem, childArr, oldChildArr, children$Arr, index);
 			return childArr;
 		}, []);
 	});
+
+    return elem;
+}
+
+// reacts to property changes and applies these changes to the dom element
+function manageProperties(elem, properties) {
+	if (properties==null) return;
+
+	// allow class as attribute to feel more like html
+	if (properties.class !== undefined) {
+		properties.className = properties.class;
+	}
+
+	Object.getOwnPropertyNames(properties).map(property => {
+		let value = properties[property];
+		if (property === 'style' && typeof value !== 'string') {
+			Object.assign(elem.style, value);
+		} else if (elem[property]!==undefined) {
+			elem[property] = value;
+		}
+	});
+}
+
+// manage changes in the childrens (not deep changes, those are handled by the children)
+function manageChildren(parentElem, childArr, oldChildArr, children$Arr, index) {
+	// the default childArr will be [null]
+	let changes = calcChanges(childArr, oldChildArr);
+
+	if (changes.length === 0) {
+		return childArr;
+	}
+
+	let elementsBefore = getElementsBefore(children$Arr, index);
+	// apply the changes
+	Promise.all(
+		changes.map(({indexes: subIndexes, type, num, elems}) => {
+			return updateDOMforChild(elems, elementsBefore, subIndexes, type, num, parentElem)
+		})
+	)
+		// after changes are done notify listeners
+		.then(() => {
+			notifyParent(parentElem, UPDATE_DONE);
+		});
 }
 
 // when we insert into the DOM we need to know where
 // as children can be arrays we need to know how many children are before the one we want to put into the DOM
 function getElementsBefore(children$Arr, index) {
-	return children$Arr.slice(0, index).reduce((sum, cur$) => sum += cur$().length, 0);
+	return children$Arr.slice(0, index)
+		.reduce((sum, cur$) => 
+			sum += cur$.value.length!==undefined 
+				? cur$.value.length 
+				: cur$.value!==null 
+					? 1 
+					: 0
+		, 0);
 }
 
 // very simple change detection
 // if the children objects are not the same, they changed
-// if there was an element before and there is no one know it got removed 
+// if there was an element before and there is no one now it got removed 
 function calcChanges(childArr, oldChildArr) {
 	let subIndex = 0;
 	let changes = [];
@@ -156,7 +149,7 @@ function removeElements(index, subIndexes, countOfElementsToRemove, parentElem, 
 		}
 	}
 	resolve();
-}
+};
 // replace elements with new ones
 function setElements(index, subIndexes, children, parentElem, resolve) {
 	children.forEach((child, childIndex) => {

@@ -8,7 +8,7 @@ export const h = (tag, props, ...children) => {
 	// jsx usally resolves known tags as strings and unknown tags as functions
 	// if it is a sub component, resolve that component
 	if (typeof tag === 'function') {
-		return tag(props, children);
+		return tag(props, ...children);
 	}
 	return createElement(
 		tag,
@@ -49,7 +49,7 @@ function makeStreams(childrenArr) {
 	});
 }
 
-// converts an input into an array
+// converts any input$ into an array$
 function makeArray(stream) {
 	return stream.map(value => {
 		if (value == null) {
@@ -62,7 +62,7 @@ function makeArray(stream) {
 	})
 }
 
-// flattens an array
+// flattens an array$
 function flatten(stream) {
 	return stream.map(arr => {
 		while (arr.some(value => Array.isArray(value))) {

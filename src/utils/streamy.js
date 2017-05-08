@@ -175,5 +175,5 @@ export function merge$(...streams) {
 }
 
 export function isStream(parent$) {
-	return parent$ != null && !!parent$.IS_STREAM;
+	return parent$ != null && parent$.IS_STREAM === true;
 }
